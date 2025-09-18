@@ -15,6 +15,7 @@
             v-model="formData.fullName" 
             :placeholder="t('selling_scrap.enterYourName')"
             :class="{ 'error': formErrors.fullName }"
+            :readonly="!!initialData"
           />
         </div>
         <span v-if="formErrors.fullName" class="error-message">{{ formErrors.fullName }}</span>
@@ -29,6 +30,7 @@
             v-model="formData.email" 
             :placeholder="t('selling_scrap.enterYourEmail')"
             :class="{ 'error': formErrors.email }"
+            :readonly="!!initialData"
           />
         </div>
         <span v-if="formErrors.email" class="error-message">{{ formErrors.email }}</span>
@@ -61,12 +63,20 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive } from 'vue';
+import { ref, reactive, watch, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import Terms from '@/views/auth/Terms.vue';
 import { useI18n } from 'vue-i18n'
 
 const { t } = useI18n()
+
+// Définir la prop initialData
+const props = defineProps({
+  initialData: {
+    type: Object,
+    default: null
+  }
+});
 
 const emit = defineEmits(['submit']);
 const router = useRouter();
@@ -86,6 +96,29 @@ const formErrors = reactive({
   fullName: '',
   email: '',
   termsAccepted: ''
+});
+
+// Surveiller les changements de initialData
+watch(
+  () => props.initialData,
+  (newData) => {
+    if (newData) {
+      formData.fullName = newData.fullName || '';
+      formData.email = newData.email || '';
+      console.log('🔄 Données pré-remplies depuis initialData:', formData);
+    }
+  },
+  { immediate: true, deep: true } // 👈 important
+);
+
+
+// Mettre à jour les données au montage du composant
+onMounted(() => {
+  if (props.initialData) {
+    formData.fullName = props.initialData.fullName || '';
+    formData.email = props.initialData.email || '';
+    console.log('Données pré-remplies au montage:', formData);
+  }
 });
 
 // Array des IDs de catégories valides
@@ -134,9 +167,11 @@ const submitForm = () => {
     localStorage.setItem('scrapUserData', JSON.stringify(payload));
     emit('submit', payload); // ← Émet vers le parent
 
-    // Réinitialisation du formulaire
-    formData.fullName = '';
-    formData.email = '';
+    // Réinitialisation du formulaire seulement si pas de données initiales
+    if (!props.initialData) {
+      formData.fullName = '';
+      formData.email = '';
+    }
     formData.termsAccepted = false;
   }
 };
@@ -146,7 +181,6 @@ const goToPrevious = () => {
   console.log('Navigate to previous step');
 };
 </script>
-
 
 <style scoped>
 .sell-scrap {
@@ -282,6 +316,11 @@ h1 {
 
 .form-group input.error {
   border-color: var(--error);
+}
+
+.form-group input:read-only {
+  background-color: #f5f5f5;
+  cursor: not-allowed;
 }
 
 .error-message {

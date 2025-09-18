@@ -51,6 +51,7 @@
               {{ $t('order.createdAt') }}
               <i class="fas" :class="sortIcon('created_at')"></i>
             </th>
+            <th>{{ $t('order.actions') }}</th>
           </tr>
         </thead>
 
@@ -97,6 +98,17 @@
               <span v-if="successStatus[order.id]" class="checkmark">✅</span>
             </td>
             <td class="text-center order-date">{{ formatDate(order.created_at) }}</td>
+            <td class="text-center">
+              <!-- Bouton pour afficher les images -->
+              <button 
+                v-if="hasImages(order)" 
+                @click="showImages(order)" 
+                class="show-images-btn"
+              >
+                عرض الصور
+              </button>
+              <span v-else>لا توجد صور</span>
+            </td>
           </tr>
         </tbody>
       </table>
@@ -154,6 +166,36 @@
         </select>
       </div>
     </div>
+
+    <!-- Modal pour afficher les images -->
+    <div v-if="showImageModal" class="modal-overlay" @click="closeModal">
+      <div class="modal-content" @click.stop>
+        <div class="modal-header">
+          <h3>صور الطلب #{{ selectedOrder.id }}</h3>
+          <button class="close-btn" @click="closeModal">&times;</button>
+        </div>
+        <div class="modal-body">
+          <div class="images-container">
+            <div v-for="(item, index) in selectedOrder.scrap_items" :key="item.id" class="item-images">
+              <h4 v-if="selectedOrder.scrap_items.length > 1">الصنف {{ index + 1 }}</h4>
+              <div class="image-gallery">
+                <div v-for="(img, imgIndex) in item.images" :key="imgIndex" class="image-item">
+                  <img :src="img.image" :alt="'صورة ' + (imgIndex + 1)" @click="openImage(img.image)" />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal pour image en grand -->
+    <div v-if="showLargeImage" class="image-modal-overlay" @click="closeImageModal">
+      <div class="image-modal-content">
+        <button class="close-btn" @click="closeImageModal">&times;</button>
+        <img :src="largeImageUrl" alt="صورة كبيرة" />
+      </div>
+    </div>
   </div>
 </template>
 
@@ -168,14 +210,17 @@ export default {
       sortField: 'created_at',
       sortDirection: 'desc',
       currentPage: 1,
-      pageSize: 100, // 100 éléments par page par défaut
+      pageSize: 100,
+      showImageModal: false,
+      selectedOrder: null,
+      showLargeImage: false,
+      largeImageUrl: ''
     };
   },
   computed: {
     filteredOrders() {
       let filtered = this.orders;
       
-      // Filtre par recherche
       if (this.searchQuery) {
         const query = this.searchQuery.toLowerCase();
         filtered = filtered.filter(order => 
@@ -186,29 +231,24 @@ export default {
         );
       }
       
-      // Filtre par statut
       if (this.statusFilter) {
         filtered = filtered.filter(order => order.status === this.statusFilter);
       }
       
-      // Tri
       if (this.sortField) {
         filtered = filtered.sort((a, b) => {
           let aValue = a[this.sortField];
           let bValue = b[this.sortField];
           
-          // Pour les champs de date
           if (this.sortField === 'created_at') {
             aValue = new Date(aValue).getTime();
             bValue = new Date(bValue).getTime();
           }
           
-          // Pour le tri numérique
           if (typeof aValue === 'number' && typeof bValue === 'number') {
             return this.sortDirection === 'asc' ? aValue - bValue : bValue - aValue;
           }
           
-          // Pour le tri alphabétique
           if (typeof aValue === 'string') aValue = aValue.toLowerCase();
           if (typeof bValue === 'string') bValue = bValue.toLowerCase();
           
@@ -270,6 +310,25 @@ export default {
         return item.name_ar || item.name;
       }
       return item.name_en || item.name;
+    },
+    hasImages(order) {
+      return order.scrap_items.some(item => item.images && item.images.length > 0);
+    },
+    showImages(order) {
+      this.selectedOrder = order;
+      this.showImageModal = true;
+    },
+    openImage(imageUrl) {
+      this.largeImageUrl = imageUrl;
+      this.showLargeImage = true;
+    },
+    closeModal() {
+      this.showImageModal = false;
+      this.selectedOrder = null;
+    },
+    closeImageModal() {
+      this.showLargeImage = false;
+      this.largeImageUrl = '';
     },
     updateStatus(order) {
       const token = localStorage.getItem('token');
@@ -658,6 +717,192 @@ export default {
   color: #004085;
 }
 
+/* Bouton pour afficher les images */
+.show-images-btn {
+  padding: 8px 16px;
+  background-color: #6f42c1;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.3s;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.show-images-btn:hover {
+  background-color: #5a32a3;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Modal pour les images */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  padding: 20px;
+  animation: fadeIn 0.3s ease;
+}
+
+.modal-content {
+  background: white;
+  border-radius: 12px;
+  width: 90%;
+  max-width: 900px;
+  max-height: 90vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  animation: slideUp 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from { 
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to { 
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px;
+  border-bottom: 1px solid #eaecef;
+  background: #f8f9fa;
+}
+
+.modal-header h3 {
+  margin: 0;
+  color: #2c3e50;
+  font-size: 20px;
+}
+
+.close-btn {
+  background: none;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  color: #6c757d;
+  transition: color 0.3s;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+}
+
+.close-btn:hover {
+  color: #495057;
+  background-color: #e9ecef;
+}
+
+.modal-body {
+  padding: 20px;
+  overflow-y: auto;
+}
+
+.images-container {
+  display: flex;
+  flex-direction: column;
+  gap: 25px;
+}
+
+.item-images h4 {
+  margin: 0 0 15px 0;
+  color: #2c3e50;
+  font-size: 18px;
+  padding-bottom: 8px;
+  border-bottom: 2px solid #eaecef;
+}
+
+.image-gallery {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 15px;
+}
+
+.image-item {
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s, box-shadow 0.3s;
+  cursor: pointer;
+  height: 150px;
+}
+
+.image-item:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+}
+
+.image-item img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* Modal pour image en grand */
+.image-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.9);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1001;
+  padding: 20px;
+}
+
+.image-modal-content {
+  position: relative;
+  max-width: 90%;
+  max-height: 90%;
+}
+
+.image-modal-content img {
+  max-width: 100%;
+  max-height: 90vh;
+  border-radius: 8px;
+  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
+}
+
+.image-modal-content .close-btn {
+  position: absolute;
+  top: -40px;
+  right: 0;
+  color: white;
+  font-size: 30px;
+}
+
+.image-modal-content .close-btn:hover {
+  color: #ddd;
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
 /* Pagination */
 .pagination-container {
   display: flex;
@@ -806,6 +1051,23 @@ export default {
   .item-properties {
     flex-direction: column;
     gap: 4px;
+  }
+  
+  .image-gallery {
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  }
+  
+  .modal-content {
+    width: 95%;
+    padding: 10px;
+  }
+  
+  .modal-header {
+    padding: 15px;
+  }
+  
+  .modal-body {
+    padding: 15px;
   }
 }
 </style>

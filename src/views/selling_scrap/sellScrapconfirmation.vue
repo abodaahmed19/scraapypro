@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, onMounted, reactive } from 'vue';
 import { useRouter } from 'vue-router';
 
 import navBar from '@/components/UIElements/navBar.vue';
@@ -9,10 +9,11 @@ import ErrorModal from '@/components/UIElements/ErrorModal.vue';
 
 const progress = ref(100);
 const isAccountCreated = ref(false);
-const userData = ref({ fullName: '', email: '' });
+const userData = reactive({ fullName: '', email: '', phone: '' });
 const showModal = ref(false);
 const hasError = ref(false);
 const errorMessage = ref('');
+const isLoggedIn = ref(false);
 
 const router = useRouter();
 import { useI18n } from 'vue-i18n';
@@ -34,8 +35,66 @@ if (!localStorage.getItem("pickupAddress")) {
   localStorage.setItem("pickupAddress", JSON.stringify(defaultAddress));
 }
 
+// Fonction pour vérifier si l'utilisateur est connecté
+const checkUserLoggedIn = () => {
+  const token = localStorage.getItem('token');
+  isLoggedIn.value = !!token;
+  return isLoggedIn.value;
+};
+
+// Fonction pour récupérer les données utilisateur depuis l'API
+const fetchUserData = async () => {
+  const token = localStorage.getItem('token');
+  if (!token) return null;
+
+  try {
+    const response = await fetch('https://vmi2584358.contaboserver.net/api/users/me/', {
+      method: 'GET',
+      headers: {
+        'Authorization': `Token ${token}`,
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (response.ok) {
+      const userInfo = await response.json();
+      return userInfo;
+    } else {
+      console.error('Erreur lors de la récupération des données utilisateur');
+      return null;
+    }
+  } catch (error) {
+    console.error('Erreur réseau:', error);
+    return null;
+  }
+};
+
+// Récupération des données utilisateur au montage du composant
+onMounted(async () => {
+  if (checkUserLoggedIn()) {
+    const userInfo = await fetchUserData();
+    if (userInfo) {
+      // Pré-remplir les données utilisateur si connecté
+      userData.fullName = userInfo.name || '';
+      userData.email = userInfo.email || '';
+      userData.phone = userInfo.contact_number || localStorage.getItem("userPhone") || '';
+      
+      // Sauvegarder le téléphone dans localStorage pour compatibilité
+      if (userInfo.contact_number) {
+        localStorage.setItem("userPhone", userInfo.contact_number);
+      }
+      
+      console.log("Données utilisateur récupérées:", userData);
+    }
+  } else {
+    // Récupérer le téléphone depuis localStorage si non connecté
+    userData.phone = localStorage.getItem("userPhone") || '';
+  }
+});
+
 async function handleFormSubmit(formData: { fullName: string; email: string }) {
-  userData.value = formData;
+  // Utiliser les données du formulaire ou celles de l'utilisateur connecté
+  const submitData = isLoggedIn.value ? userData : formData;
   isAccountCreated.value = true;
   hasError.value = false;
   errorMessage.value = '';
@@ -80,9 +139,9 @@ async function handleFormSubmit(formData: { fullName: string; email: string }) {
   const imagesWithPrefix = JSON.parse(localStorage.getItem("images") || "[]");
   const selectedCategoryId = parseInt(localStorage.getItem("selectedCategoryId") || '0');
   const userType = localStorage.getItem("user_type") || '';
-  const phone = localStorage.getItem("userPhone") || '';
+  const phone = isLoggedIn.value ? userData.phone : localStorage.getItem("userPhone") || '';
 
-  if (!selectedCategoryId || !formData.email || !userType || !phone || !pickupAddress.address_line1) {
+  if (!selectedCategoryId || !submitData.email || !userType || !phone || !pickupAddress.address_line1) {
     alert("Données obligatoires manquantes !");
     return;
   }
@@ -106,7 +165,7 @@ async function handleFormSubmit(formData: { fullName: string; email: string }) {
       fd.append("description", scrapItem.description?.trim() || "Pas de description fournie");
       fd.append("pickup_address", JSON.stringify(pickupAddress));
       fd.append("total_amount", estimatedAmount);
-      fd.append("email", formData.email);
+      fd.append("email", submitData.email);
       fd.append("user_type", userType);
       fd.append("phone", phone);
       // 🔹 Ajout date et heure pour scrap item
@@ -163,7 +222,7 @@ async function handleFormSubmit(formData: { fullName: string; email: string }) {
         latitude: pickupAddress.latitude,
         longitude: pickupAddress.longitude,
         ownerscrap_phone: phone,
-        ownerscrap_email: formData.email
+        ownerscrap_email: submitData.email
       };
     });
 
@@ -207,7 +266,7 @@ async function handleFormSubmit(formData: { fullName: string; email: string }) {
 
     // Données pour la confirmation
     const totalAmount = parseFloat(estimatedAmount);
-    const userEmail = formData.email;
+    const userEmail = submitData.email;
     const userPhone = phone;
 
     // 🔹 Nettoyage complet du localStorage après succès
@@ -231,11 +290,6 @@ async function handleFormSubmit(formData: { fullName: string; email: string }) {
 }
 </script>
 
-
-
-
-
-
 <template>
   <div class="app">
     <navBar />
@@ -252,7 +306,11 @@ async function handleFormSubmit(formData: { fullName: string; email: string }) {
         </div>
 
         <template v-if="!isAccountCreated">
-          <SellScrapForm @submit="handleFormSubmit" />
+          <!-- Passer les données utilisateur au formulaire si connecté -->
+          <SellScrapForm 
+            :initialData="isLoggedIn ? userData : null" 
+            @submit="handleFormSubmit" 
+          />
         </template>
         <template v-else>
          
@@ -263,7 +321,6 @@ async function handleFormSubmit(formData: { fullName: string; email: string }) {
     <footerComponant />
   </div>
 </template>
-
 
 <style scoped>
   .scrap-selection {

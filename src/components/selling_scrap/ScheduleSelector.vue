@@ -139,7 +139,7 @@ const submitSchedule = () => {
 <style scoped>
 .schedule-selector {
   margin-bottom: 24px;
-  font-family: Arial, sans-serif;
+  font-family: Inter, Zain;
 }
 .schedule-header {
   display: flex;

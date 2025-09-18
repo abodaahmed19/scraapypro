@@ -33,11 +33,11 @@
         <div class="invoice-info">
           <div class="info-section">
             <h3>المفوتر إليه:</h3>
-            <p><strong>الاسم:</strong> {{ order?.user.name }}</p>
-            <p><strong>البريد الإلكتروني:</strong> {{ order?.user.email }}</p>
-            <p><strong>رقم الجوال:</strong> {{ order?.user.contact_number }}</p>
-            <p><strong>العنوان:</strong> {{ order?.user.pickup_address }}</p>
-            <p><strong>نوع المستخدم:</strong> {{ translateUserType(order?.user.user_type) }}</p>
+            <p><strong>الاسم:</strong> شركة باهظ للتجارة</p>
+            <p><strong>البريد الإلكتروني:</strong> info@bahed.sa</p>
+            <p><strong>رقم الجوال:</strong> 0561203390</p>
+            <p><strong>العنوان:</strong> 2571 Old Abqaiq Rd، ELAA9179، 9179, Dhahran 34512</p>
+            <p><strong>نوع المستخدم:</strong> شركة</p>
           </div>
           
         </div>
@@ -58,23 +58,30 @@
           </tbody>
         </table>
 
-        <div class="banking-summary" v-if="order?.scrap_items.length">
-          <h3>معلومات الدفع:</h3>
-          <p><strong>الاسم:</strong> {{ order?.scrap_items[0]?.banking_info.full_name }}</p>
-          <p><strong>البنك:</strong> {{ order?.scrap_items[0]?.banking_info.bank_name }}</p>
-          <p><strong>آيبان:</strong> {{ order?.scrap_items[0]?.banking_info.iban_number }}</p>
-        </div>
-
         <div class="invoice-summary">
+          <div class="summary-details">
+            <div class="detail-row">
+              <span>المبلغ الأساسي:</span>
+              <span>{{ calculateBaseAmount(order?.total_amount) }} <img :src="sarIconUrl" alt="SAR" class="sar-icon-sm" /></span>
+            </div>
+            <div class="detail-row">
+              <span>رسوم الخدمة:</span>
+              <span>10.00 <img :src="sarIconUrl" alt="SAR" class="sar-icon-sm" /></span>
+            </div>
+            <div class="detail-row">
+              <span>الضريبة (15%):</span>
+              <span>{{ calculateTax(order?.total_amount) }} <img :src="sarIconUrl" alt="SAR" class="sar-icon-sm" /></span>
+            </div>
+            <div class="detail-row total-row">
+              <span>المجموع:</span>
+              <span>{{ calculateTotalWithFee(order?.total_amount) }} <img :src="sarIconUrl" alt="SAR" class="sar-icon" /></span>
+            </div>
+          </div>
+          
           <div class="summary-row">
             <div>
               <p>إجمالي الأصناف: {{ order?.total_items }}</p>
               <p>تاريخ الإنشاء: {{ formatDate(order?.created_at) }}</p>
-            </div>
-            <div class="summary-total">
-              <strong>المجموع:</strong> 
-              {{ calculateTotalWithFee(order?.total_amount) }}
-              <img :src="sarIconUrl" alt="SAR" class="sar-icon" />
             </div>
           </div>
         </div>
@@ -133,11 +140,27 @@ const sarIconUrl = '/src/assets/svg-icons/SAR.svg';
 const closeModal = () => emit('close');
 const printInvoice = () => window.print();
 
-// دالة لإضافة 0.3 إلى المبلغ الإجمالي
-const calculateTotalWithFee = (amount: string | undefined) => {
-  if (!amount) return '0';
+// دالة لحساب المبلغ الأساسي (المبلغ * 1.3)
+const calculateBaseAmount = (amount: string | undefined) => {
+  if (!amount) return '0.00';
   const numericAmount = parseFloat(amount);
-  return ((numericAmount * 1.0) ).toFixed(2);
+  return (numericAmount * 1.3).toFixed(2);
+};
+
+// دالة لحساب الضريبة
+const calculateTax = (amount: string | undefined) => {
+  if (!amount) return '0.00';
+  const numericAmount = parseFloat(amount);
+  const tax = ((numericAmount * 1.3) + 10.0) * 0.15;
+  return tax.toFixed(2);
+};
+
+// دالة لحساب المبلغ الإجمالي مع الرسوم والضريبة
+const calculateTotalWithFee = (amount: string | undefined) => {
+  if (!amount) return '0.00';
+  const numericAmount = parseFloat(amount);
+  const total = ((numericAmount * 1.3) + 10.0) * 1.15;
+  return total.toFixed(2);
 };
 
 const getStatusClass = (status = '') => {
@@ -180,224 +203,306 @@ const formatDate = (s: string = '') => {
 
 * {
   font-family: 'Tajawal', sans-serif;
+  box-sizing: border-box;
 }
 
 .modal-overlay {
   position: fixed; 
   inset: 0;
-  background: rgba(0,0,0,0.5);
+  background: rgba(0,0,0,0.7);
   display: flex; 
   align-items: center; 
   justify-content: center;
   z-index: 1000;
+  padding: 20px;
 }
 .modal {
   background: #fff;
   width: 90%; 
   max-width: 800px;
-  border-radius: 12px;
+  border-radius: 16px;
   overflow: hidden;
   direction: rtl;
-  border: 2px solid #2ecc71; /* تغيير اللون إلى الأخضر */
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+  border: 2px solid #2ecc71;
+  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.2);
+  max-height: 90vh;
+  overflow-y: auto;
 }
 
 .modal-header {
   display: flex; 
   justify-content: space-between; 
   align-items: center; 
-  padding: 1rem; 
-  background: #f8f9fa;
-  border-bottom: 1px solid #e9ecef;
+  padding: 1.2rem; 
+  background: linear-gradient(to right, #f8f9fa, #e9f5ec);
+  border-bottom: 1px solid #e0e6e3;
+  position: sticky;
+  top: 0;
+  z-index: 10;
 }
 
 .logo-title-container {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 15px;
 }
 
 .logo {
-  height: 40px;
+  height: 45px;
   width: auto;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));
 }
 
 .modal-title { 
   margin: 0; 
   color: #2c3e50;
   font-weight: 700;
+  font-size: 1.4rem;
 }
 
-.actions .btn { 
-  margin-left: 0.5rem; 
+.actions { 
+  display: flex;
+  gap: 12px;
 }
 
 .modal-content { 
-  padding: 1.5rem; 
+  padding: 2rem; 
 }
 
 .invoice-header { 
-  margin-bottom: 1.5rem; 
+  margin-bottom: 2rem; 
   border-bottom: 2px solid #2ecc71; 
-  padding-bottom: 1rem; 
+  padding-bottom: 1.5rem; 
 }
 
 .invoice-meta { 
   display: flex; 
   justify-content: space-between; 
   align-items: flex-start; 
+  flex-wrap: wrap;
+  gap: 20px;
 }
 
 .invoice-title { 
-  margin: 0; 
-  font-size: 2rem; 
+  margin: 0 0 10px 0; 
+  font-size: 2.2rem; 
   color: #2c3e50;
   font-weight: 700;
+  text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
 }
 
 .meta-right p { 
-  margin: 0.5rem 0; 
+  margin: 0.6rem 0; 
   text-align: left;
+  font-size: 0.95rem;
 }
 
 .invoice-info { 
   display: flex; 
   justify-content: space-between; 
-  margin: 1.5rem 0; 
+  margin: 2rem 0; 
 }
 
 .info-section { 
   width: 100%; 
-  background: #f8f9fa;
-  padding: 1rem;
-  border-radius: 8px;
-  border-right: 3px solid #2ecc71;
+  background: linear-gradient(to left, #f8f9fa, #f0f9f3);
+  padding: 1.5rem;
+  border-radius: 10px;
+  border-right: 4px solid #2ecc71;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.05);
 }
 
 .info-section h3 {
   color: #2c3e50;
-  margin-bottom: 0.8rem;
-  padding-bottom: 0.5rem;
-  border-bottom: 1px dashed #ddd;
+  margin-bottom: 1rem;
+  padding-bottom: 0.7rem;
+  border-bottom: 2px dashed #ddeedd;
+  font-size: 1.3rem;
+}
+
+.info-section p {
+  margin: 0.8rem 0;
+  font-size: 1rem;
 }
 
 .invoice-table {
   width: 100%; 
   border-collapse: collapse; 
-  margin-bottom: 1.5rem;
-  font-size: 0.95rem;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+  margin: 2rem 0;
+  font-size: 1rem;
+  box-shadow: 0 5px 15px rgba(0,0,0,0.06);
+  border-radius: 10px;
+  overflow: hidden;
 }
 .invoice-table th, .invoice-table td {
-  border: 1px solid #ddd; 
-  padding: 0.75rem; 
+  border: 1px solid #e0e6e3; 
+  padding: 1rem; 
   text-align: center;
 }
 .table-header th {
-  background: #2ecc71; /* تغيير اللون إلى الأخضر */
+  background: linear-gradient(to right, #2ecc71, #27ae60);
   color: #fff;
   font-weight: bold;
-  font-size: 1rem;
+  font-size: 1.1rem;
+  padding: 1.2rem;
 }
 
 .invoice-table tbody tr:nth-child(even) {
-  background-color: #f8f9fa;
+  background-color: #f8fdf9;
 }
 
 .invoice-table tbody tr:hover {
-  background-color: #ecfdf3;
+  background-color: #e8f5ee;
+  transition: background-color 0.2s;
 }
 
 .status-badge {
-  padding: 0.3rem 0.8rem;
-  border-radius: 20px;
+  padding: 0.4rem 1rem;
+  border-radius: 25px;
   color: #fff;
-  font-size: 0.85rem;
+  font-size: 0.9rem;
   font-weight: 500;
+  display: inline-block;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
-.status-approved { background: #28a745; }
-.status-pending  { background: #ffc107; color: #000; }
-.status-rejected { background: #dc3545; }
-.status-treated  { background: #17a2b8; }
+.status-approved { background: linear-gradient(to right, #28a745, #219e3f); }
+.status-pending  { background: linear-gradient(to right, #ffc107, #eead00); color: #000; }
+.status-rejected { background: linear-gradient(to right, #dc3545, #c82333); }
+.status-treated  { background: linear-gradient(to right, #17a2b8, #13899c); }
 
-.banking-summary {
-  margin-top: 1.5rem;
-  padding: 1.2rem;
-  border: 1px solid #ddd;
-  border-radius: 8px;
-  background: #f8f9fa;
-  text-align: right;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-  border-left: 3px solid #2ecc71;
+.invoice-summary {
+  margin-top: 2.5rem;
+  padding: 1.5rem;
+  background: linear-gradient(to left, #f8f9fa, #f0f9f3);
+  border-radius: 12px;
+  border: 1px solid #e0e6e3;
+  box-shadow: 0 5px 15px rgba(0,0,0,0.05);
 }
-.banking-summary h3 {
-  margin-top: 0;
-  font-size: 1.1rem;
+
+.summary-details {
+  margin-bottom: 1.5rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 2px dashed #ddeedd;
+}
+
+.detail-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 0.8rem 0;
+  font-size: 1.05rem;
+}
+
+.detail-row.total-row {
+  font-size: 1.4rem;
+  font-weight: bold;
   color: #2c3e50;
-  margin-bottom: 1rem;
-}
-.banking-summary p {
-  margin: 0.5rem 0;
-  font-size: 0.95rem;
-  color: #555;
+  margin-top: 1.2rem;
+  padding-top: 1.2rem;
+  border-top: 2px dashed #ddeedd;
 }
 
-.invoice-summary .summary-row {
+.sar-icon-sm {
+  width: 18px;
+  height: 18px;
+  margin-right: 5px;
+}
+
+.summary-row {
   display: flex; 
   justify-content: space-between; 
   align-items: center;
-  padding: 1rem 0; 
-  border-top: 2px solid #2ecc71; 
-  margin-top: 1.5rem;
+  padding-top: 1rem; 
+  margin-top: 1rem;
+  border-top: 1px solid #e0e6e3;
 }
+
 .summary-total { 
-  font-size: 1.3rem; 
+  font-size: 1.5rem; 
   font-weight: bold; 
   color: #2c3e50;
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
 }
 
 .sar-icon {
-  width: 24px;
-  height: 24px;
+  width: 28px;
+  height: 28px;
+  filter: drop-shadow(0 1px 2px rgba(0,0,0,0.1));
 }
 
 .invoice-footer { 
   text-align: center; 
-  margin-top: 2rem; 
-  font-size: 1rem; 
+  margin-top: 2.5rem; 
+  font-size: 1.1rem; 
   color: #7f8c8d;
-  padding-top: 1rem;
+  padding-top: 1.5rem;
   border-top: 1px solid #ecf0f1;
 }
 
 .btn {
   display: inline-flex; 
   align-items: center; 
-  gap: 0.3rem;
-  padding: 0.5rem 1rem; 
+  gap: 0.5rem;
+  padding: 0.7rem 1.5rem; 
   border: none; 
-  border-radius: 6px;
+  border-radius: 8px;
   cursor: pointer; 
-  font-size: 0.9rem;
+  font-size: 1rem;
   font-weight: 500;
-  transition: all 0.2s ease;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
 }
 .btn-primary   { 
-  background: #2ecc71; 
+  background: linear-gradient(to right, #2ecc71, #27ae60); 
   color: #fff; 
 }
 .btn-primary:hover {
-  background: #27ae60;
+  background: linear-gradient(to right, #27ae60, #219653);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(0,0,0,0.15);
 }
 .btn-secondary { 
-  background: #7f8c8d; 
+  background: linear-gradient(to right, #7f8c8d, #6c7a7b); 
   color: #fff; 
 }
 .btn-secondary:hover {
-  background: #636e72;
+  background: linear-gradient(to right, #6c7a7b, #5d6a6b);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+}
+
+@media (max-width: 768px) {
+  .modal {
+    width: 95%;
+    max-height: 95vh;
+  }
+  
+  .modal-content {
+    padding: 1.2rem;
+  }
+  
+  .invoice-meta {
+    flex-direction: column;
+  }
+  
+  .modal-header {
+    flex-direction: column;
+    gap: 15px;
+    text-align: center;
+  }
+  
+  .actions {
+    width: 100%;
+    justify-content: center;
+  }
+  
+  .detail-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 5px;
+  }
 }
 
 @media print {
@@ -408,6 +513,14 @@ const formatDate = (s: string = '') => {
     max-width: none; 
     border-radius: 0; 
     border: none;
+    max-height: none;
+    overflow: visible;
+  }
+  
+  .modal-overlay {
+    position: static;
+    background: none;
+    padding: 0;
   }
   
   .invoice-header {
@@ -420,6 +533,10 @@ const formatDate = (s: string = '') => {
   
   .invoice-summary {
     page-break-before: avoid;
+  }
+  
+  .btn {
+    display: none;
   }
 }
 </style>

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router'
 
 import navBar from '@/components/UIElements/navBar.vue';
@@ -15,12 +15,40 @@ const { t } = useI18n()
 const progress = ref(40);
 const router = useRouter();
 
+// Fonction pour vérifier si l'utilisateur a un token
+const checkUserToken = () => {
+  // Vérifie si un token existe dans le localStorage
+  const token = localStorage.getItem('authToken') || 
+                localStorage.getItem('token') || 
+                sessionStorage.getItem('authToken') || 
+                sessionStorage.getItem('token');
+  
+  // Si vous utilisez un store (Vuex/Pinia), vous pouvez aussi vérifier l'état d'authentification
+  // const isAuthenticated = useAuthStore().isAuthenticated;
+  
+  return !!token; // Retourne true si un token existe
+};
+
 const handlePrevious = () => {
   router.push('/scrap-category')
 };
+
 const handleNext = () => {
-  router.push('/scrap-phone');
+  // Vérifie si l'utilisateur est connecté
+  if (checkUserToken()) {
+    router.push('/location-picker');
+  } else {
+    router.push('/scrap-phone');
+  }
 }
+
+// Optionnel: Redirection automatique au chargement de la page si nécessaire
+onMounted(() => {
+  // Si vous voulez rediriger immédiatement quand la page charge
+  // if (checkUserToken()) {
+  //   router.push('/location-picker');
+  // }
+});
 
 </script>
 

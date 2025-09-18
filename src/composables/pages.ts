@@ -54,6 +54,7 @@ import InspectionsHistoryPage from "@/views/management/vendor/inspections/Histor
 import SendToUsPage from '@/views/management/staff/sendto_us.vue'
 import InvoicePurchase from '@/views/invoice_purchase.vue'
 import SalesAnalysis from '@/views/management/staff/SalesAnalysis.vue'
+import InvoicePurchases from '@/views/invoice_purchases.vue'
 
 import ListingView from '@/views/management/history/ListingView.vue'
 import savedAddress from '@/components/legalInformation/address.vue'
@@ -317,6 +318,12 @@ export function usePages() {
           icon: PurchasingIcon,
           component: InvoicePurchase
         },
+         {
+        key: 'purchase-invoices-bahed',
+        title: 'فواتير البيع الموجهة لباهض',
+        icon: PurchasingIcon, // même icône que فاتورة الشراء
+        component: InvoicePurchases
+      },
         {
   key: 'bank-transfer',
   title: 'طلبات تحويل بنكي',

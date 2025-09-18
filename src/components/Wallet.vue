@@ -60,14 +60,14 @@
       <!-- Bank Transfer Request -->
       <div class="action-card bank-transfer">
         <h2 class="action-title">{{ $t('wallet.bankTransferRequest') }}</h2>
-        <p class="info-note">{{ $t('wallet.minBalanceNote') }}</p>
+        <p class="info-note">{{ $t('wallet.minTransferNote') }}</p>
         <form @submit.prevent="submitBankTransferRequest" class="action-form">
           <input
             v-model="bankTransfer.amount"
             type="number"
             step="0.01"
-            min="0.01"
-            :max="wallet.balance - 200"
+            min="200"
+            :max="wallet.balance"
             :placeholder="$t('wallet.amount')"
             class="input-field"
             :class="{ 'input-error': amountError }"
@@ -308,7 +308,7 @@ const translations = {
       next: 'التالي',
       success: 'نجاح',
       insufficientBalance: 'رصيد غير كافي',
-      minBalanceNote: 'ملاحظة: يجب الحفاظ على 200 ريال سعودي على الأقل بعد التحويل البنكي',
+      minTransferNote: 'ملاحظة: يجب أن يكون مبلغ التحويل البنكي 200 ريال سعودي على الأقل',
       statuses: {
         pending: 'قيد الانتظار',
         approved: 'تم الموافقة',
@@ -412,10 +412,10 @@ const getBankDisplayName = (bankValue) => {
 // Validation
 const validateBankAmount = () => {
   const amount = parseFloat(bankTransfer.value.amount);
-  if (amount <= 0) {
-    amountError.value = "يجب أن يكون المبلغ أكبر من الصفر.";
-  } else if (wallet.value.balance - amount < 200) {
-    amountError.value = "رصيد غير كافي. يجب الحفاظ على 200 ريال سعودي على الأقل بعد التحويل البنكي.";
+  if (amount < 200) {
+    amountError.value = "يجب أن يكون المبلغ 200 ريال سعودي على الأقل.";
+  } else if (amount > wallet.value.balance) {
+    amountError.value = "رصيد غير كافي.";
   } else {
     amountError.value = "";
   }
@@ -539,8 +539,8 @@ const submitBankTransferRequest = async () => {
 
   try {
     const amount = parseFloat(bankTransfer.value.amount);
-    if (wallet.value.balance - amount < 200) {
-      throw new Error("رصيد غير كافي. يجب الحفاظ على 200 ريال سعودي على الأقل بعد التحويل البنكي.");
+    if (amount < 200) {
+      throw new Error("يجب أن يكون مبلغ التحويل البنكي 200 ريال سعودي على الأقل.");
     }
 
     await apiCall(`${BASE_URL}/api/wallet/wallets/bank-transfer-request/`, {
@@ -842,7 +842,7 @@ onMounted(loadAll);
 
 .search-input {
   padding: 0.5rem 0.75rem;
-  border: 1px solid #d1d5db;
+  border: 1px solid 'Segoe UI', 'Cairo', Tahoma, Geneva, Verdana, sans-serif;
   border-radius: 0.5rem;
   width: 100%;
   max-width: 20rem;

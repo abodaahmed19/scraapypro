@@ -305,7 +305,7 @@ navBar, footerComponant {
   max-width: 600px;
   margin: 40px auto;
   padding: 40px 20px;
-  font-family: Arial, sans-serif;
+  font-family: Inter, Zain;
   color: #222;
   flex: 1;
   display: flex;

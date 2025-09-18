@@ -1623,8 +1623,10 @@ const messages = {
        completePayment: "Complete Payment",
     pleaseLoginToProceed: "Please login to proceed",
     paymentSuccess: "Payment Successful",
-    amountAddedToWallet: "{amount} has been added to your wallet"
+    amountAddedToWallet: "{amount} has been added to your wallet",
+    confirmationOnly: "Confirmation only"
     },
+    goHome: "Go Home",
     aboutUs: {
       title: "About Us",
       intro: "Scraapy is committed to managing hazardous and non-hazardous waste digitally and technically, providing all support services, and marketing specialized products for recycling and sustainability. Driven by our awareness of our national responsibility to utilize waste in systematic and automated ways that ensure sustainability across the value chain.",
@@ -3841,8 +3843,10 @@ const messages = {
           completePayment: "إتمام الدفع",
     pleaseLoginToProceed: "يرجى تسجيل الدخول للمتابعة",
     paymentSuccess: "تم الدفع بنجاح",
-    amountAddedToWallet: "تم إضافة {amount} إلى محفظتك"
+    amountAddedToWallet: "تم إضافة {amount} إلى محفظتك",
+    confirmationOnly: "تأكيد فقط"
     },
+    goHome: "الذهاب إلى الصفحة الرئيسية",
       steps: {
     login: "تسجيل الدخول",
     verifyOtp: "التحقق من الرمز",
