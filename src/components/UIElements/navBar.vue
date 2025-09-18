@@ -133,13 +133,6 @@ export default defineComponent({
     },
     marketPlaceFilters() {
       const filters = [];
-      if (!this.$userStore.getters.hasBusinessProfile) {
-        filters.push({
-          label: this.$t('burger.sell_scrap'),
-          value: 'selling_scrap',
-          route: { name: 'ScrapSelect', query: { tab: 'selling_scrap' } }
-        })
-      }
       filters.push(
         {
           label: this.$t('burger.marketPlace'),
@@ -232,9 +225,6 @@ export default defineComponent({
       </div>
 
       <div v-if="!isMobile" class="links">
-        <router-link v-if="!$userStore.getters.hasBusinessProfile" :to="{ name: 'ScrapSelect', query: { tab: 'selling_scrap' } }"  class="link" :class="{ active: activeTab === 'selling_scrap' }">
-          {{ $t('burger.sell_scrap') }}
-        </router-link>
         <router-link :to="{ name: 'marketplace', query: { tab: 'product' } }" class="link" :class="{ active: activeTab === 'product' }">
           {{ $t('burger.marketPlace') }}
         </router-link>

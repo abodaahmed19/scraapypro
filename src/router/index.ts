@@ -97,56 +97,6 @@ const router = createRouter({
       component: () => import('@/views/service_request/Demolition.vue'),
     },
     {
-      path: '/scrap-item/:categoryName',
-      name: 'ScrapItem',
-      component: () => import('@/views/selling_scrap/ScrapItem.vue')
-    },
-    {
-      path: '/scrap-category',
-      name: 'ScrapCategory',
-      component: () => import('@/views/selling_scrap/Scrap_category.vue')
-    },
-    {
-      path: '/scrap-select',
-      name: 'ScrapSelect',
-      component: () => import('@/views/selling_scrap/ScrapSelect.vue'),
-    },
-    {
-      path: '/scrap-phone',
-      name: 'ScrapPhone',
-      component: () => import('@/views/selling_scrap/ScrapPhone.vue')
-    },
-    {
-      path: '/sell-scrap',
-      name: 'SellScrap',
-      component: () => import('@/views/selling_scrap/SellScrapView.vue')
-    },
-    {
-      path: '/otp',
-      name: 'xOtpverified',
-      component: () => import('@/views/selling_scrap/xOtpverified.vue')
-    },
-    {
-      path: '/location-picker',
-      name: 'LocationPicker',
-      component: () => import('@/views/selling_scrap/LocationPickerPage.vue')
-    },
-    {
-      path: '/info-bank',
-      name: 'InfoBank',
-      component: () => import('@/views/selling_scrap/infoBank.vue')
-    },
-    {
-      path: '/sell-scrap-confirmation',
-      name: 'SellScrapConfirmation',
-      component: () => import('@/views/selling_scrap/sellScrapconfirmation.vue')
-    },
-    {
-      path: '/confirmation',
-      name: 'Confirmation',
-      component: () => import('@/views/selling_scrap/ConfirmationScreen.vue')
-    },
-    {
       path: '/download-now',
       name: 'DownloadNow',
       component: () => import('@/views/DownloadNow.vue')
